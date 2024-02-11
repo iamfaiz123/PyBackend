@@ -46,7 +46,7 @@ def validate_signup_form(requestBody):
     elif not email:
         raise SignFormValidationError('email is empty', 301,401)
     else:
-        return User(name=user_name, password=password, email=email.lower())    
+        return User.objects.create( password=password, email=email.lower(), name= user_name, )    
      
 
 @csrf_exempt
@@ -57,6 +57,7 @@ def signup(request):
         return JsonResponse({'error':'Status code not allowed','errorCode':322},status=405)
     try:
         signupForm = json.loads(request.body)
+       
         user = validate_signup_form(signupForm)
         user.save()
         return JsonResponse({'success':'user created'},status=201)
@@ -64,10 +65,14 @@ def signup(request):
     except SignFormValidationError as e:
         return JsonResponse({'error':e.message,'errorCode':e.errorCode},status=e.statusCode)
     except Exception as e:
-        print(e)
         return JsonResponse({'error':'internal server error','errorCode':500},status=500)
 
-
+from django.http import JsonResponse
+from rest_framework.views import APIView
+from rest_framework_simplejwt.tokens import RefreshToken  # Fixed typo here
+from django.contrib.auth import authenticate
+from django.conf import settings
+import jwt
 @csrf_exempt
 def login(request):
     # if invalid request method return error
@@ -76,19 +81,31 @@ def login(request):
     try:
         jsonData = json.loads(request.body)
         userLogin = validate_login_form(jsonData)
-        
         userData = User.objects.get(email=userLogin.email)
-        print(userData)
-        #if userData.password != userLogin.password:
-            #return JsonResponse({'error':'email or password incorrect'},status=401)
+        if userData.password != userLogin.password:
+            return JsonResponse({'error':'email or password incorrect'},status=401)
+         # JWT payload
+        payload = {'email': userData.email}
+        # Generate JWT token
+        jwt_token = jwt.encode(payload, settings.SECRET_KEY, algorithm='HS256')
+        
+        # Return token in response
+        return JsonResponse({'token': jwt_token})    
 
-        return JsonResponse({'success':'user created'},status=201)
 
     except LoginFormValidationError as e:
         return JsonResponse({'error':e.message,'errorCode':e.errorCode},status=e.statusCode) 
-    # except Exception as e:
-    #     print(e)
-    #     return JsonResponse({'error':'internal server error','errorCode':500},status=500)
+    except Exception as e:
+        print(e)
+        return JsonResponse({'error':'internal server error','errorCode':500},status=500)
+
+@csrf_exempt
+def get_user_data(request):
+    userData = User.objects.get(email=request.userEmail)
+    print(userData)
+    return JsonResponse({'data':userData.email},status=200)
+    
+
 
 
 

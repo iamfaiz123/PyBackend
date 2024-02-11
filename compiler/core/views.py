@@ -11,9 +11,10 @@ import traceback
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 import json
+import jwt
 
 @csrf_exempt
-def execute_python(request):
+def execute_code(request):
     # Check if request method is POST
     if request.method == 'POST':
         # Get the JSON data from request body

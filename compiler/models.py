@@ -11,3 +11,15 @@ class User(models.Model):
 
     def __str__(self):
         return self.name
+
+class CodeAttempt(models.Model):
+    user_email = models.EmailField()
+    question_slug = models.SlugField()
+    attempt_error = models.TextField()
+    attempt_output = models.TextField()
+    code = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.user_email} - {self.question_slug} - {self.created_at}"
+
