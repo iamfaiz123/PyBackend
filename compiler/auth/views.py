@@ -82,6 +82,8 @@ def login(request):
         jsonData = json.loads(request.body)
         userLogin = validate_login_form(jsonData)
         userData = User.objects.get(email=userLogin.email)
+        print(userData.password)
+        print(userLogin.password)
         if userData.password != userLogin.password:
             return JsonResponse({'error':'email or password incorrect'},status=401)
          # JWT payload
